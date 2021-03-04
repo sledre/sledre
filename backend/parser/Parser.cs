@@ -22,14 +22,14 @@ namespace Parser
 
     class Parser
     {
-        private static bool isValidLengthForItems(String[] items)
+        private static bool isValidLengthForItems(List<string> items)
         {
-            return items.Length >= 5;
+            return items.Count >= 5;
         }
 
         private static bool isThreadValid(String threadString)
         {
-            long threadInt; 
+            long threadInt;
             return Int64.TryParse(threadString, out threadInt);
         }
 
@@ -88,7 +88,7 @@ namespace Parser
         {
             for (; i < lines.Length; i++)
             {
-                string[] items = lines[i].Split();
+                List<string> items = lines[i].Split().ToList();
                 if (isValidLengthForItems(items))
                     if (isThreadValid(items[4]))
                     {
@@ -99,7 +99,7 @@ namespace Parser
                         if (isEntry(items[indexFuncName]) == 0)
                             if (string.Compare(getFunc(items[indexFuncName]), funcName) == 0)
                             {
-                                if (items.Length == indexFuncName + 3)
+                                if (items.Count == indexFuncName + 3)
                                     return items[indexFuncName + 2]; //Check if several return
                                 return "";
                             }
@@ -108,37 +108,68 @@ namespace Parser
             return null;
         }
 
-        private static void writeJson(List<string> jsonList)
+        private static string writeJson(List<string> jsonList, string filename)
         {
-            FileStream stream = null;
-            stream = new FileStream("log.json", FileMode.OpenOrCreate);
-            using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
+            if (File.Exists(filename))
+                File.Delete(filename);
+
+            string tmp = "{\"results\":{[";
+            using (StreamWriter writer = File.CreateText(filename))
             {
                 writer.WriteLine('[');
                 writer.Write(jsonList[0]);
-                for (int i = 1; i < jsonList.Count; i ++)
+                tmp += jsonList[0];
+                for (int i = 0; i < jsonList.Count; i++)
+                {
+                    tmp += (',' + jsonList[i]);
                     writer.WriteLine(',' + jsonList[i]);
-                writer.WriteLine(']');      
+                }
+                writer.WriteLine(']');
+                tmp += "]}}";
+            }
+            return tmp;
+        }
+
+        private static void deleteSpaces(List<string> items, int length)
+        {
+            int nb_items = 0;
+            int i = 0;
+
+            while ( nb_items < length && i < items.Count)
+            {
+                if (items[i] == "")
+                    items.RemoveAt(i);
+                else
+                    nb_items++;
+                i++;
             }
         }
-        
-        public static void parseLogs(string filename)
+
+        public static void parseLogs(string filename, string output)
         {
-            StreamReader reader = File.OpenText(filename);
-            string[] lines = reader.ReadToEnd().Split('\n');
+            string[] lines = null;
+            using (StreamReader reader = File.OpenText(filename))
+            {
+                lines = reader.ReadToEnd().Split('\n');
+            }   
             List<string> jsonList = new List<string>();
             long start_time = reformatTimestamp(lines[0].Split(' ')[0]).Item2;
             
             for (int i = 0; i < lines.Length; i++)
             {
-                string[] items = lines[i].Split(' ');
+
+                List<string> items = lines[i].Split(' ').ToList();
+
+                deleteSpaces(items, 4);
+
                 if (isValidLengthForItems(items))
-                { 
+                {
+
                     if (isThreadValid(items[4]))
                     {
+                        
                         int indexFuncName = 5;
-                        while (isEntry(items[indexFuncName]) == -1)
-                            indexFuncName++;
+                        deleteSpaces(items, indexFuncName);
 
                         if (isEntry(items[indexFuncName]) == 1)
                         {
@@ -153,29 +184,29 @@ namespace Parser
                             log.funcName = getFunc(items[indexFuncName]);
                             log.funcParams = getFuncParams(items[indexFuncName]);
                             log.funcOutput = getFuncOutput(i + 1, lines, log.funcName);
-
+                            
                             try
                             {
                                 jsonList.Add(JsonConvert.SerializeObject(log, Formatting.Indented));
                             }
                             catch (JsonException) 
                             {
-                                Console.WriteLine("Didn't work for " + log.funcName);
-                                Thread.Sleep(100);
+                                jsonList.Add("Error during serialization");
                             }
                                                                 
                         }
                     }
                 }
             }
-            writeJson(jsonList);
-            reader.Close();
+            Console.WriteLine(writeJson(jsonList, output));
+            Thread.Sleep(10);
         }
         
         static void Main(string[] args)
         {
-            string filename = "traces.txt";
-            parseLogs(filename);       
+            string inputFilename = "traces.txt";
+            string outputFilename = "logs.json";
+            parseLogs(inputFilename, outputFilename);       
         }
     }
 }
