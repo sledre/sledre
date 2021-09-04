@@ -4,3 +4,6 @@
 [submodule "agent/unpacking/mal_unpack"]
 	path = agent/unpacking/mal_unpack
 	url = https://github.com/hasherezade/mal_unpack.git
+[submodule "frontend"]
+	path = frontend
+	url = git@github.com:sledre/frontend.git
