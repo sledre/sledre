@@ -7,3 +7,6 @@
 [submodule "frontend"]
 	path = frontend
 	url = git@github.com:sledre/frontend.git
+[submodule "agent"]
+	path = agent
+	url = git@github.com:sledre/agent.git
