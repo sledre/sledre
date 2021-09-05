@@ -30,24 +30,44 @@ This dataset could then be used in machine learning to try to classify samples b
 
 - [X] Docker installed and running
 - [X] docker-compose
-- [X] Python3 for the setup script
+- [X] Python3 and pip3 for the setup script
+- [X] qemu-convert binary (found in package qemu-utils)
 
 ### Procedure
-To install the project, run the following commands:
-```python
+To install the project, download and unzip the latest release.  
+Then, run the following commands:
+```bash
+sudo apt update
+sudo apt install qemu-utils
 pip3 install -r requirements.txt
 python3 setup.py -w <nbr_workers>
 ```
 
-You can also use the option `--dev` to configure the project for developement.
-
-## Running the projet
+## Usage
 To run the project, just use the following command:
 
-```
-docker-compose up -d
+```bash
+docker-compose -p sledre up -d
 ```
 
-## Usage
 You can now launch the app on your favorite Browser and upload your samples. Once the treatment is done you can download the results list (in a JSON format) on your computer.
 The application should be available at http://172.20.0.10/
+
+
+## Contributing
+Run the following commands to install the latest commit:
+```bash
+git clone --recursive git@github.com:sledre/sledre.git
+sudo apt update
+sudo apt install qemu-utils
+pip3 install -r requirements.txt
+python3 setup.py --dev -w <nbr_workers>
+```
+
+Then run the following command to start the application:
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+In development configuration, backend and frontend folders are shared with containers using volumes so the project support hot reload.  
+However, when editing celery tasks, do not forget to restart the celery container.

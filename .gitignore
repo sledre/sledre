@@ -218,3 +218,4 @@ workers/*.qcow2
 workers/snapshot.gz
 
 data
+bin

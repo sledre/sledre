@@ -8,7 +8,7 @@ from workers.models import Worker
 from jobs.models import JobState
 
 
-NETWORK = "autodetours_autodetours_lan"
+NETWORK = "sledre_sledre_lan"
 INPUT_DIR = os.environ.get("WIN7_IMAGES_DIR")
 NB_WORKERS = int(os.environ.get("NB_WIN7_WORKERS"))
 QEMU_IMAGE = os.environ.get("QEMU_IMAGE")
@@ -74,7 +74,7 @@ def workers_automation():
     cmd = " ".join(cmd)
 
     for i in range(NB_WORKERS):
-        worker = f"autodetours_workers_{i}"
+        worker = f"sledre_worker_{i}"
         try:
             client.containers.get(worker)
         except docker.errors.NotFound:

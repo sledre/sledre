@@ -395,6 +395,8 @@ def main(args):
     Args:
         args (Object): Setup args from argparser
     """
+    global DEV, QEMU_IMAGE
+    
     handler = logging.StreamHandler(sys.stdout)
     docker_client = docker.DockerClient(base_url=DOCKER_SOCKET)
     ssh = paramiko.SSHClient()
