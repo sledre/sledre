@@ -11,7 +11,7 @@ from jobs.models import JobState
 NETWORK = "autodetours_autodetours_lan"
 INPUT_DIR = os.environ.get("WIN7_IMAGES_DIR")
 NB_WORKERS = int(os.environ.get("NB_WIN7_WORKERS"))
-QEMU_IMAGE = "autodetours_qemu"
+QEMU_IMAGE = os.environ.get("QEMU_IMAGE")
 
 
 @shared_task

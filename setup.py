@@ -17,6 +17,7 @@ from subprocess import Popen, PIPE
 from time import sleep
 
 # Constants
+SLEDRE_VERSION = "v0.0.1"
 DEV = False
 HOST = "127.0.0.1"
 SSH_PORT = 2222
@@ -26,14 +27,14 @@ WORKERS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/workers"
 BASE_QCOW2 = WORKERS_DIR + "/base.qcow2"
 WORKER_QCOW2 = "win7.qcow2"
 WORKER_SNAPSHOT = "snapshot.gz"
-INSTALL_CONTAINER = "autodetours_qemu_gen"
+INSTALL_CONTAINER = "sledre_qemu_gen"
 ENV_FILE = ".env"
 SSH_USERNAME = "IEUser"
 SSH_PASSWORD = "Passw0rd!"
 WINDOWS_PATH = "/cygdrive/c/Temp"
-QEMU_IMAGE = "autodetours_qemu"
+QEMU_IMAGE = f"quay.io/sledre/qemu:{SLEDRE_VERSION}"
 WIN7_URL = "https://az792536.vo.msecnd.net/vms/VMBuild_20150916/VirtualBox/IE9/IE9.Win7.VirtualBox.zip"
-BINARIES = "./binaries/"
+BINARIES = "./bin/"
 
 logger = logging.getLogger()
 
@@ -259,13 +260,17 @@ def qcow2_generation(ssh):
 
 
 def build_qemu_image(client):
-    logger.info("Building qemu docker image...")
-    try:
-        client.images.get("autodetours_qemu")
-    except docker.errors.ImageNotFound:
-        client.images.build(tag="autodetours_qemu", path="./qemu")
-        return
-    logger.info("Image not rebuilt because it already exists.")
+    if DEV:
+        logger.info("Building qemu container image...")
+        try:
+            client.images.get(QEMU_IMAGE)
+        except docker.errors.ImageNotFound:
+            client.images.build(tag=QEMU_IMAGE, path="./qemu")
+            return
+        logger.info("Image not rebuilt because it already exists.")
+    else:
+        logger.info("Downloading qemu container image")
+        client.images.pull(QEMU_IMAGE)
 
 
 def run_qemu_container(client, snapshot_mode=False):
@@ -344,7 +349,8 @@ def generate_postgres_password():
 
 def update_env_file(nbr_workers):
     logger.info(f"Updating {ENV_FILE} configuration file...")
-    text = f"""DEBUG={"True" if DEV else "False"}
+    text = f"""SLEDRE_VERSION={SLEDRE_VERSION}
+DEBUG={"True" if DEV else "False"}
 SECRET_KEY='{generate_django_secret()}'
 
 POSTGRES_ENGINE=django.db.backends.postgresql
@@ -358,6 +364,7 @@ CELERY_TASKS_SCHEDULE=10.0
 
 NB_WIN7_WORKERS={nbr_workers}
 WIN7_IMAGES_DIR={WORKERS_DIR}
+QEMU_IMAGE={QEMU_IMAGE}
 """
     with open(ENV_FILE, "w") as fd:
         fd.write(text)
@@ -394,6 +401,8 @@ def main(args):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     DEV = args.dev
+    if DEV:
+        QEMU_IMAGE = "sledre_qemu"
 
     handler.setFormatter(SetupFormatter())
     logger.addHandler(handler)

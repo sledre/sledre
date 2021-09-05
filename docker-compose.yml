@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.13
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    env_file:
+      - ./.env
+
+  redis:
+    image: redis:alpine
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.14
+
+  celery:
+    image: quay.io/sledre/backend:${SLEDRE_VERSION}
+    entrypoint: []
+    command: celery -A api worker -l info
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.15
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/backend:/data
+    depends_on:
+      - db
+      - redis
+      - api
+    env_file:
+      - ./.env
+
+  celery-beat:
+    image: quay.io/sledre/backend:${SLEDRE_VERSION}
+    entrypoint: []
+    command: celery -A api beat -l info
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.16
+    depends_on:
+      - celery
+    env_file:
+      - ./.env
+
+  api:
+    image: quay.io/sledre/backend:${SLEDRE_VERSION}
+    command: python manage.py runserver 0.0.0.0:8000
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.12
+    volumes:
+      - ./data/backend:/data
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+
+  front:
+    image: quay.io/sledre/frontend:${SLEDRE_VERSION}
+    command: npm run dev
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.11
+    depends_on:
+      - api
+
+  nginx:
+    image: quay.io/sledre/nginx:${SLEDRE_VERSION}
+    networks:
+      autodetours_lan:
+        ipv4_address: 172.20.0.10
+    environment:
+      - NGINX_PORT=80
+    depends_on:
+      - front
+      - api
+
+volumes:
+  node_modules:
+
+networks:
+  autodetours_lan:
+    driver: bridge
+    internal: true
+    ipam:
+     config:
+       - subnet: 172.20.0.0/24
+         gateway: 172.20.0.1

@@ -6,20 +6,19 @@ on:
     - v*
 
 jobs:
-  build:
+  build-images:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        #image: [backend, frontend, qemu, nginx]
-        image: [backend, qemu, nginx]
+        image: [ backend, frontend, qemu, nginx ]
     env:
       REGISTRY: quay.io
 
     steps:
       - name: Clone Repository
         uses: actions/checkout@v2
-        #with:
-        #  submodules: 'recursive'
+        with:
+          submodules: 'recursive'
 
       - name: Login to Quay.io repository
         uses: docker/login-action@v1
@@ -37,3 +36,168 @@ jobs:
           context: ./${{ matrix.image }}
           push: true
           tags: ${{ env.REGISTRY }}/sledre/${{ matrix.image }}:${{ env.RELEASE_VERSION }}
+    
+  build-agent:
+    env:
+      SOLUTION_FILE_PATH: .
+      BUILD_CONFIGURATION: Release
+      AGENT_DIR: agent/
+      
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        arch: [x86]
+        conf: [Release]
+        
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Restore NuGet packages
+        working-directory: ${{ env.AGENT_DIR }}
+        run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+
+      - name: Build the Agent
+        working-directory: ${{ env.AGENT_DIR }}
+        run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform=${{ matrix.arch }} ${{ env.SOLUTION_FILE_PATH }}
+        
+      - name: Upload agent artifacts for ${{ matrix.arch }} on ${{ matrix.os }} 
+        uses: actions/upload-artifact@v2
+        with:
+          name: agent-artifacts
+          path: |
+            ${{ env.AGENT_DIR }}/AutoDetoursAgent/bin/x86/Release/AutoDetoursAgent.exe
+            ${{ env.AGENT_DIR }}/AutoDetoursAgent/bin/x86/Release/Newtonsoft.Json.dll
+    
+  build-detours:
+    env:
+      # Turn on msvc analysis during build, enable once warnings are clean.
+      DETOURS_ANALYZE: true
+      DETOURS_DIR: agent/plugins/hooking
+      # Compile in parallel where possible.
+      CL: /MP
+      
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        arch: [x86]
+        conf: [Release]
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      # Setup build environment variables using vcvarsall.bat.
+      - name: Configure MSCV Compiler for ${{ matrix.arch }}
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+
+      - name: Build Detours and TraceApi for ${{ matrix.arch }} on ${{ matrix.os }} 
+        env:
+          # Tell detours what process to target
+          DETOURS_TARGET_PROCESSOR: ${{ env.VSCMD_ARG_TGT_ARCH }}
+          DETOURS_CONFIG: ${{ matrix.conf }}
+        working-directory: ${{ env.DETOURS_DIR }}
+        run: nmake
+
+      - name: Upload Detours artifacts for ${{ matrix.arch }} on ${{ matrix.os }} 
+        uses: actions/upload-artifact@v2
+        with:
+          name: agent-artifacts
+          path: |
+            ${{ env.DETOURS_DIR }}/bin.x86/withdll.exe
+            ${{ env.DETOURS_DIR }}/bin.x86/trcapi32.dll
+  
+  build-unpacker:
+    env:
+      UNPACKER_DIR: agent/plugins/unpacking/mal_unpack
+      # Compile in parallel where possible.
+      CL: /MP
+      
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        arch: [x86]
+        conf: [Release]
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Configure mal_unpack build
+        working-directory: ${{ env.UNPACKER_DIR }}
+        run: |
+          mkdir build
+          cd build
+          cmake .. -A Win32 -T host=${{ matrix.arch }}
+      - name: Build the unpacker
+        working-directory: ${{ env.UNPACKER_DIR }}
+        run: cmake --build ./build --config ${{ matrix.conf }}
+
+      - name: Upload unpacker artifacts for ${{ matrix.arch }} on ${{ matrix.os }} 
+        uses: actions/upload-artifact@v2
+        with:
+          name: agent-artifacts
+          path: |
+            ${{ env.UNPACKER_DIR }}/build/Release/mal_unpack.exe
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [ build-agent, build-detours, build-unpacker ]
+        
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Set release version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Download agent binaries
+        uses: actions/download-artifact@v2
+        with:
+          name: agent-artifacts
+          path: bin/
+
+      - name: Add static binaries
+        run: mv agent/bin/* bin/
+
+      - name: Create release zip for version ${{ env.RELEASE_VERSION }}
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'SledRE-${{ env.RELEASE_VERSION }}.zip'
+          path: |
+            bin/
+            docker-compose.yml
+            README.md
+            requirements.txt
+            setup.py
+            LICENCE
+      
+      - name: Create release ${{ env.RELEASE_VERSION }}
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'SledRE-${{ env.RELEASE_VERSION }}.zip'
+          body: 'SledRE release for version ${{ env.RELEASE_VERSION }}.'
+          token: ${{ secrets.GITHUB_TOKEN }}
