@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        #image: [backend, frontend, qemu, nginx]
+        image: [backend, qemu, nginx]
+    env:
+      REGISTRY: quay.io
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        #with:
+        #  submodules: 'recursive'
+
+      - name: Login to Quay.io repository
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.QUAYIO_USERNAME }}
+          password: ${{ secrets.QUAYIO_PASSWORD }}
+        
+      - name: Set release version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Build and push container image ${{ matrix.image }}
+        uses: docker/build-push-action@v2
+        with:
+          context: ./${{ matrix.image }}
+          push: true
+          tags: ${{ env.REGISTRY }}/sledre/${{ matrix.image }}:${{ env.RELEASE_VERSION }}
