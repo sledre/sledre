@@ -204,8 +204,8 @@ sw.*
 
 .vs
 
-agent/service/AutoDetoursAgent/obj
-agent/service/AutoDetoursAgent/bin
+agent/service/SledREAgent/obj
+agent/service/SledREAgent/bin
 agent/hooking/*/obj.X86
 agent/hooking/*/bin.X86
 agent/hooking/*/bin.x86

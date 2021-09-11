@@ -2,13 +2,14 @@
   <img width="200" height="200" src="doc/logoyellow.png">
 </p>
 
-[![BackendCI](https://github.com/Kn0wl3dge/AutoDetours/actions/workflows/backend.yml/badge.svg)](https://github.com/Kn0wl3dge/AutoDetours/actions/workflows/backend.yml)
-# AutoDetours
+[![Release](https://github.com/sledre/sledre/actions/workflows/release.yml/badge.svg)](https://github.com/sledre/sledre/actions/workflows/release.yml)
+[![Linter](https://github.com/sledre/sledre/actions/workflows/linter.yml/badge.svg)](https://github.com/sledre/sledre/actions/workflows/linter.yml)
+# SledRE
 
 
 ## Introduction
 
-AutoDetours is a scalable application for Windows malware analysis.
+SledRE is a scalable application for Windows malware analysis.
 For the moment only PESieve and Detours are integrated.
 
 [PESieve](https://github.com/hasherezade/pe-sieve) job goal is to unpack a Windows PE malware.  
@@ -22,7 +23,7 @@ Detours traces can directly be imported in Ghidra using [ghidra-sledre](https://
 
 ## Architecture
 <p align="center">
-  <img height="500" src="doc/AutoDetoursArchi.png">
+  <img height="500" src="doc/SledREArchi.png">
 </p>
 
 ## Installation
@@ -38,8 +39,7 @@ Detours traces can directly be imported in Ghidra using [ghidra-sledre](https://
 To install the project, download and unzip the latest release.  
 Then, run the following commands:
 ```bash
-sudo apt update
-sudo apt install qemu-utils
+sudo apt update && sudo apt install qemu-utils
 pip3 install -r requirements.txt
 python3 setup.py -w <nbr_workers>
 ```
@@ -56,7 +56,7 @@ The application should be available at http://172.20.0.10/
 
 
 ## Contributing
-Start by cloning the repository in recursive mode:
+To contribute, you should install the project in development mode. To do that, start by cloning the repository in recursive mode:
 ```bash
 git clone --recursive git@github.com:sledre/sledre.git
 ```

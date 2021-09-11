@@ -16,7 +16,7 @@ jobs:
         python-version: [ 3.8 ]
 
     steps:
-      - name : Checkout - AutoDetours repository
+      - name : Checkout - SledRE repository
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}

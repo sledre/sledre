@@ -128,7 +128,7 @@ def check_binaries():
         "./bin",
         "./bin/7z-setup.exe",
         "./bin/dotnetframeworkinstaller.exe",
-        "./bin/AutoDetoursAgent.exe",
+        "./bin/SledREAgent.exe",
         "./bin/mal_unpack.exe",
         "./bin/Newtonsoft.Json.dll",
         "./bin/trcapi32.dll",
@@ -173,18 +173,18 @@ def disable_service(ssh, svc):
     send_ssh_cmd(ssh, f'cmd.exe /c "net stop {svc}"')
 
 
-def create_autodetours_svc(ssh):
-    logger.info("Creating AutoDetours service...")
-    send_ssh_cmd(ssh, f"cd {WINDOWS_PATH} && chmod +x AutoDetoursAgent.exe")
+def create_sledre_svc(ssh):
+    logger.info("Creating SledRE service...")
+    send_ssh_cmd(ssh, f"cd {WINDOWS_PATH} && chmod +x SledREAgent.exe")
 
     send_ssh_cmd(
         ssh,
-        'cmd.exe /c "sc create AgentDetours start= auto binPath= C:\\Temp\\AutoDetoursAgent.exe"',
+        'cmd.exe /c "sc create AgentDetours start= auto binPath= C:\\Temp\\SledREAgent.exe"',
     )
 
 
 def install_dependencies(ssh):
-    logger.info("Installing AutoDetours dependencies...")
+    logger.info("Installing SledRE dependencies...")
     send_ssh_cmd(ssh, f'cd {WINDOWS_PATH} && cmd.exe /c "start /wait 7z-setup.exe /S"')
     send_ssh_cmd(
         ssh,
@@ -194,7 +194,7 @@ def install_dependencies(ssh):
 
 
 def check_agent_state(ssh):
-    logger.info("Checking if AutoDetours service is running...")
+    logger.info("Checking if SledRE service is running...")
     stdout = send_ssh_cmd(ssh, 'cmd.exe /c "sc query AgentDetours"')
     if "RUNNING" not in stdout[3]:
         return False
@@ -265,7 +265,7 @@ def qcow2_generation(ssh):
     # Disable Windows Defender
     disable_service(ssh, "windefend")
 
-    create_autodetours_svc(ssh)
+    create_sledre_svc(ssh)
     install_dependencies(ssh)
 
     wait_reboot(ssh)
@@ -477,7 +477,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-AutoDetours is an application allowing to trace syscalls from multiple samples at the same time.
+SledRE is an application allowing to trace syscalls from multiple samples at the same time.
 The goal is to be able to generate a large dataset of Windows API calls by malwares.
 This dataset could then be used in machine learning to try to classify samples by families.
 To provide this solution we are using Detours project from Microsoft.""",
