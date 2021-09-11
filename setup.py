@@ -123,6 +123,28 @@ def wait_reboot(ssh):
     logger.info("Windows VM just rebooted!")
 
 
+def check_binaries():
+    paths = [
+        "./bin",
+        "./bin/7z-setup.exe",
+        "./bin/dotnetframeworkinstaller.exe",
+        "./bin/AutoDetoursAgent.exe",
+        "./bin/mal_unpack.exe",
+        "./bin/Newtonsoft.Json.dll",
+        "./bin/trcapi32.dll",
+        "./bin/withdll.exe"
+    ]
+    check = True
+    for p in paths:
+        if not os.path.exists(p):
+            check = False
+            logger.error(f"File {p} was not found and is needed to create the VM image.")
+    if not check:
+        logger.error("Please add the needed binaries inside the ./bin folder.")
+        logger.error("You can either build them from sledre/agent repository or get the bin folder from the latest sledre release (supposing its compatible).")
+        exit(1)
+
+
 def copy_files_to_vm(ssh):
     logger.info("Copying files into the Windows VM...")
     try:
@@ -414,6 +436,8 @@ def main(args):
         logger.setLevel(logging.INFO)
 
     logger.info("Starting the installation...")
+
+    check_binaries()
 
     clean(args.clean)
 
