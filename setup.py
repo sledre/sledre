@@ -132,16 +132,20 @@ def check_binaries():
         "./bin/mal_unpack.exe",
         "./bin/Newtonsoft.Json.dll",
         "./bin/trcapi32.dll",
-        "./bin/withdll.exe"
+        "./bin/withdll.exe",
     ]
     check = True
     for p in paths:
         if not os.path.exists(p):
             check = False
-            logger.error(f"File {p} was not found and is needed to create the VM image.")
+            logger.error(
+                f"File {p} was not found and is needed to create the VM image."
+            )
     if not check:
         logger.error("Please add the needed binaries inside the ./bin folder.")
-        logger.error("You can either build them from sledre/agent repository or get the bin folder from the latest sledre release (supposing its compatible).")
+        logger.error(
+            "You can either build them from sledre/agent repository or get the bin folder from the latest sledre release (supposing its compatible)."
+        )
         exit(1)
 
 
@@ -417,7 +421,7 @@ def main(args):
         args (Object): Setup args from argparser
     """
     global DEV, QEMU_IMAGE
-    
+
     handler = logging.StreamHandler(sys.stdout)
     docker_client = docker.DockerClient(base_url=DOCKER_SOCKET)
     ssh = paramiko.SSHClient()
