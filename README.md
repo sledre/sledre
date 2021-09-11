@@ -2,14 +2,14 @@
   <img width="200" height="200" src="doc/logoyellow.png">
 </p>
 
-[![BackendCI](https://github.com/Kn0wl3dge/AutoDetours/actions/workflows/backend.yml/badge.svg)](https://github.com/Kn0wl3dge/AutoDetours/actions/workflows/backend.yml)
-# AutoDetours
+[![Release](https://github.com/sledre/sledre/actions/workflows/release.yml/badge.svg)](https://github.com/sledre/sledre/actions/workflows/release.yml)
+[![Linter](https://github.com/sledre/sledre/actions/workflows/linter.yml/badge.svg)](https://github.com/sledre/sledre/actions/workflows/linter.yml)
+# SledRE
 
-*/!\ This project isn't ready for production /!\\*
 
 ## Introduction
 
-AutoDetours is a scalable application for Windows malware analysis.
+SledRE is a scalable application for Windows malware analysis.
 For the moment only PESieve and Detours are integrated.
 
 [PESieve](https://github.com/hasherezade/pe-sieve) job goal is to unpack a Windows PE malware.  
@@ -19,9 +19,11 @@ On the one hand, this application could be used as an analysis pipeline for Wind
 On the other hand, it could be used to generate a large dataset which can contains results from differents tools.
 This dataset could then be used in machine learning to try to classify samples by families.
 
+Detours traces can directly be imported in Ghidra using [ghidra-sledre](https://github.com/sledre/ghidra-sledre/) extension.
+
 ## Architecture
 <p align="center">
-  <img height="500" src="doc/AutoDetoursArchi.png">
+  <img height="500" src="doc/SledREArchi.png">
 </p>
 
 ## Installation
@@ -37,8 +39,7 @@ This dataset could then be used in machine learning to try to classify samples b
 To install the project, download and unzip the latest release.  
 Then, run the following commands:
 ```bash
-sudo apt update
-sudo apt install qemu-utils
+sudo apt update && sudo apt install qemu-utils
 pip3 install -r requirements.txt
 python3 setup.py -w <nbr_workers>
 ```
@@ -55,19 +56,30 @@ The application should be available at http://172.20.0.10/
 
 
 ## Contributing
-Run the following commands to install the latest commit:
+To contribute, you should install the project in development mode. To do that, start by cloning the repository in recursive mode:
 ```bash
 git clone --recursive git@github.com:sledre/sledre.git
-sudo apt update
-sudo apt install qemu-utils
+```
+
+Then install the dependencies:
+```bash
+sudo apt update && sudo apt install -y qemu-utils
 pip3 install -r requirements.txt
+```
+
+Now, you'll need the agent binaries. If you're looking for a specific version or directly modifying and testing the agent, you should compile everything yourself (static binaries such as `7zip` and `dotnetframework` are located in `sledre/agent/bin`).
+If you're not editing the agent <-> API interactions, then everything should work fine with the bin folder of the latest SledRE release.
+
+Then you can setup the project using the `setup.py` script:
+```bash
 python3 setup.py --dev -w <nbr_workers>
 ```
 
-Then run the following command to start the application:
+Finally, run the following command to start the application:
 ```bash
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
 In development configuration, backend and frontend folders are shared with containers using volumes so the project support hot reload.  
-However, when editing celery tasks, do not forget to restart the celery container.
+However, when editing celery tasks, do not forget to restart the celery container.  
+You'll also need recreate the Windows VM everytime you're editing the agent.

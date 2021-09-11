@@ -123,6 +123,32 @@ def wait_reboot(ssh):
     logger.info("Windows VM just rebooted!")
 
 
+def check_binaries():
+    paths = [
+        "./bin",
+        "./bin/7z-setup.exe",
+        "./bin/dotnetframeworkinstaller.exe",
+        "./bin/SledREAgent.exe",
+        "./bin/mal_unpack.exe",
+        "./bin/Newtonsoft.Json.dll",
+        "./bin/trcapi32.dll",
+        "./bin/withdll.exe",
+    ]
+    check = True
+    for p in paths:
+        if not os.path.exists(p):
+            check = False
+            logger.error(
+                f"File {p} was not found and is needed to create the VM image."
+            )
+    if not check:
+        logger.error("Please add the needed binaries inside the ./bin folder.")
+        logger.error(
+            "You can either build them from sledre/agent repository or get the bin folder from the latest sledre release (supposing its compatible)."
+        )
+        exit(1)
+
+
 def copy_files_to_vm(ssh):
     logger.info("Copying files into the Windows VM...")
     try:
@@ -151,18 +177,18 @@ def disable_service(ssh, svc):
     send_ssh_cmd(ssh, f'cmd.exe /c "net stop {svc}"')
 
 
-def create_autodetours_svc(ssh):
-    logger.info("Creating AutoDetours service...")
-    send_ssh_cmd(ssh, f"cd {WINDOWS_PATH} && chmod +x AutoDetoursAgent.exe")
+def create_sledre_svc(ssh):
+    logger.info("Creating SledRE service...")
+    send_ssh_cmd(ssh, f"cd {WINDOWS_PATH} && chmod +x SledREAgent.exe")
 
     send_ssh_cmd(
         ssh,
-        'cmd.exe /c "sc create AgentDetours start= auto binPath= C:\\Temp\\AutoDetoursAgent.exe"',
+        'cmd.exe /c "sc create AgentDetours start= auto binPath= C:\\Temp\\SledREAgent.exe"',
     )
 
 
 def install_dependencies(ssh):
-    logger.info("Installing AutoDetours dependencies...")
+    logger.info("Installing SledRE dependencies...")
     send_ssh_cmd(ssh, f'cd {WINDOWS_PATH} && cmd.exe /c "start /wait 7z-setup.exe /S"')
     send_ssh_cmd(
         ssh,
@@ -172,7 +198,7 @@ def install_dependencies(ssh):
 
 
 def check_agent_state(ssh):
-    logger.info("Checking if AutoDetours service is running...")
+    logger.info("Checking if SledRE service is running...")
     stdout = send_ssh_cmd(ssh, 'cmd.exe /c "sc query AgentDetours"')
     if "RUNNING" not in stdout[3]:
         return False
@@ -243,7 +269,7 @@ def qcow2_generation(ssh):
     # Disable Windows Defender
     disable_service(ssh, "windefend")
 
-    create_autodetours_svc(ssh)
+    create_sledre_svc(ssh)
     install_dependencies(ssh)
 
     wait_reboot(ssh)
@@ -260,17 +286,16 @@ def qcow2_generation(ssh):
 
 
 def build_qemu_image(client):
-    if DEV:
-        logger.info("Building qemu container image...")
-        try:
-            client.images.get(QEMU_IMAGE)
-        except docker.errors.ImageNotFound:
+    try:
+        logger.info("Looking for qemu container image...")
+        client.images.get(QEMU_IMAGE)
+    except docker.errors.ImageNotFound:
+        if DEV:
+            logger.info("Building qemu container image...")
             client.images.build(tag=QEMU_IMAGE, path="./qemu")
-            return
-        logger.info("Image not rebuilt because it already exists.")
-    else:
-        logger.info("Downloading qemu container image")
-        client.images.pull(QEMU_IMAGE)
+        else:
+            logger.info("Downloading qemu container image...")
+            client.images.pull(QEMU_IMAGE)
 
 
 def run_qemu_container(client, snapshot_mode=False):
@@ -396,7 +421,7 @@ def main(args):
         args (Object): Setup args from argparser
     """
     global DEV, QEMU_IMAGE
-    
+
     handler = logging.StreamHandler(sys.stdout)
     docker_client = docker.DockerClient(base_url=DOCKER_SOCKET)
     ssh = paramiko.SSHClient()
@@ -414,6 +439,8 @@ def main(args):
         logger.setLevel(logging.INFO)
 
     logger.info("Starting the installation...")
+
+    check_binaries()
 
     clean(args.clean)
 
@@ -441,19 +468,20 @@ def main(args):
 if __name__ == "__main__":
     HEADER = """
 
-    ___         __        ____       __
-   /   | __  __/ /_____  / __ \___  / /_____  __  ____________
-  / /| |/ / / / __/ __ \/ / / / _ \/ __/ __ \/ / / / ___/ ___/
- / ___ / /_/ / /_/ /_/ / /_/ /  __/ /_/ /_/ / /_/ / /  (__  )
-/_/  |_\__,_/\__/\____/_____/\___/\__/\____/\__,_/_/  /____/
-==============================================================
+   _____ __         ______  ______
+  / ___// /__  ____/ / __ \/ ____/
+  \__ \/ / _ \/ __  / /_/ / __/   
+ ___/ / /  __/ /_/ / _, _/ /___   
+/____/_/\___/\__,_/_/ |_/_____/   
+
+==================================
 
 """
     print(HEADER)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-AutoDetours is an application allowing to trace syscalls from multiple samples at the same time.
+SledRE is an application allowing to trace syscalls from multiple samples at the same time.
 The goal is to be able to generate a large dataset of Windows API calls by malwares.
 This dataset could then be used in machine learning to try to classify samples by families.
 To provide this solution we are using Detours project from Microsoft.""",
