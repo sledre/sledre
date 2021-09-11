@@ -2,8 +2,8 @@
   <img width="200" height="200" src="doc/logoyellow.png">
 </p>
 
-[![Release](https://github.com/sledre/sledre/actions/workflows/release.yml/badge.svg)](https://github.com/sledre/sledre/actions/workflows/release.yml)
-[![Linter](https://github.com/sledre/sledre/actions/workflows/linter.yml/badge.svg)](https://github.com/sledre/sledre/actions/workflows/linter.yml)
+[![Release](https://github.com/sledre/sledre/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/sledre/sledre/actions/workflows/release.yml)
+[![Linter](https://github.com/sledre/sledre/actions/workflows/linter.yml/badge.svg?branch=main)](https://github.com/sledre/sledre/actions/workflows/linter.yml)
 # SledRE
 
 
