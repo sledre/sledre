@@ -282,17 +282,16 @@ def qcow2_generation(ssh):
 
 
 def build_qemu_image(client):
-    if DEV:
-        logger.info("Building qemu container image...")
-        try:
-            client.images.get(QEMU_IMAGE)
-        except docker.errors.ImageNotFound:
+    try:
+        logger.info("Looking for qemu container image...")
+        client.images.get(QEMU_IMAGE)
+    except docker.errors.ImageNotFound:
+        if DEV:
+            logger.info("Building qemu container image...")
             client.images.build(tag=QEMU_IMAGE, path="./qemu")
-            return
-        logger.info("Image not rebuilt because it already exists.")
-    else:
-        logger.info("Downloading qemu container image")
-        client.images.pull(QEMU_IMAGE)
+        else:
+            logger.info("Downloading qemu container image...")
+            client.images.pull(QEMU_IMAGE)
 
 
 def run_qemu_container(client, snapshot_mode=False):
@@ -465,12 +464,13 @@ def main(args):
 if __name__ == "__main__":
     HEADER = """
 
-    ___         __        ____       __
-   /   | __  __/ /_____  / __ \___  / /_____  __  ____________
-  / /| |/ / / / __/ __ \/ / / / _ \/ __/ __ \/ / / / ___/ ___/
- / ___ / /_/ / /_/ /_/ / /_/ /  __/ /_/ /_/ / /_/ / /  (__  )
-/_/  |_\__,_/\__/\____/_____/\___/\__/\____/\__,_/_/  /____/
-==============================================================
+   _____ __         ______  ______
+  / ___// /__  ____/ / __ \/ ____/
+  \__ \/ / _ \/ __  / /_/ / __/   
+ ___/ / /  __/ /_/ / _, _/ /___   
+/____/_/\___/\__,_/_/ |_/_____/   
+
+==================================
 
 """
     print(HEADER)
