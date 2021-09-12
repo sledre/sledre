@@ -297,8 +297,21 @@ def build_qemu_image(client):
             logger.info("Downloading qemu container image...")
             client.images.pull(QEMU_IMAGE)
 
+def chown_qemu_container(client, user, group):
+    if not (type(user) == type(group) and type(user) == str and (len(user) + len(group) > 2)):
+        logger.error("Must set a user and a group to change ownership")
+        return
+    logger.info(f"Setting image ownership to {user}:{group}")
+    client.containers.run(
+            QEMU_IMAGE,
+            entrypoint="/bin/chown",
+            command=["-R", f"{user}:{group}", "/image"],
+            volumes={WORKERS_DIR: {"bind": "/image", "mode": "rw"}},
+            user="root",
+    )
 
 def run_qemu_container(client, snapshot_mode=False):
+    chown_qemu_container(client, "sledreguy", "qemu")
     logger.info("Running qemu container...")
     cmd = [
         "-nographic",
@@ -342,7 +355,8 @@ def wait_qemu_container(client):
         exit(1)
 
 
-def clean(complete_clean):
+def clean(complete_clean, client):
+    chown_qemu_container(client, "user", "users")
     if complete_clean:
         logger.info("Removing /workers directory...")
 
@@ -442,7 +456,7 @@ def main(args):
 
     check_binaries()
 
-    clean(args.clean)
+    clean(args.clean, docker_client)
 
     if not os.path.exists(BASE_QCOW2):
         download_win7()
