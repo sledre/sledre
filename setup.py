@@ -412,6 +412,7 @@ CELERY_TASKS_SCHEDULE=10.0
 NB_WIN7_WORKERS={nbr_workers}
 WIN7_IMAGES_DIR={WORKERS_DIR}
 QEMU_IMAGE={QEMU_IMAGE}
+DOCKER_HOST=/var/run/docker.sock
 """
     with open(ENV_FILE, "w") as fd:
         fd.write(text)
