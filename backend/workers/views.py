@@ -8,9 +8,9 @@ from workers.models import Worker
 from workers.serializers import WorkerSerializer
 from workers.tasks import worker_delete
 
-from jobs.models import Job, JobType, JobState
+from jobs.models import Job, JobState
 
-from tags.tasks import set_tags
+from jobs.tasks import process_results
 
 
 class WorkerViewSet(
@@ -100,10 +100,7 @@ class WorkerViewSet(
             if "results" in request.data.keys():
                 worker.job.end(request.data["results"])
                 worker.job.save()
-
-                # Prevents JSON deserialization from zip file
-                if worker.job.job_type == JobType.DETOURS:
-                    set_tags.delay(worker.job.id)
+                process_results.delay(worker.job.id)
 
                 return Response({"success": "Results successfully stored"})
             else:

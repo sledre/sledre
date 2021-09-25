@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 from django.http import FileResponse
 
 from jobs.serializers import JobSerializer
@@ -32,16 +33,19 @@ class JobViewSet(
                 Defaults to None.
 
         Returns:
-            FileResponse: Reponse containing the job results.
+            Response: Reponse containing the job results.
         """
         job = get_object_or_404(Job, pk=pk)
 
         output = job.results
-        extension = output.path.split(".")[-1]
-        filename = output.path.split("/")[-1]
+        if output.name:
+            extension = output.path.split(".")[-1]
+            filename = output.path.split("/")[-1]
 
-        response = FileResponse(output, content_type="application/" + extension)
-        response["Content-Length"] = len(output)
-        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            response = FileResponse(output, content_type="application/" + extension)
+            response["Content-Length"] = len(output)
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        else:
+            response = Response({"error": "results are empty."})
 
         return response
