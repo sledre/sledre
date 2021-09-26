@@ -1,8 +1,12 @@
-FROM archlinux:latest
+FROM docker.io/library/alpine:latest
 
-RUN pacman -Syyu --noconfirm && \
-    pacman -S qemu-arch-extra qemu --noconfirm
+RUN apk add qemu-system-i386 && \
+    adduser -S sledreguy && \
+    adduser sledreguy qemu && \
+    adduser sledreguy kvm && \
+    mkdir /image && \
+    chown -R sledreguy:qemu /image
 
-RUN mkdir /image
+USER sledreguy
 
 ENTRYPOINT ["qemu-system-i386"]
