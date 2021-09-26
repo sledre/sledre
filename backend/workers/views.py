@@ -82,7 +82,7 @@ class WorkerViewSet(
             return Response({"error": "Worker is already tasked"})
 
     @action(detail=True, methods=["POST"])
-    def submit_task(self, request, pk=None):
+    def submit_results(self, request, pk=None):
         """Extra API endpoint used by the Windows Agent to submit results
         of its job. The results are send through a file (currently being
         a JSON or a ZIP)/
