@@ -22,11 +22,7 @@ DEV = False
 HOST = "127.0.0.1"
 SSH_PORT = 2222
 QMP_PORT = 2223
-DOCKER_SOCKET = (
-    "unix://var/run/docker.sock"
-    if "DOCKER_HOST" not in os.environ
-    else os.environ["DOCKER_HOST"]
-)
+DOCKER_SOCKET = "unix://var/run/docker.sock"
 WORKERS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/workers"
 BASE_QCOW2 = WORKERS_DIR + "/base.qcow2"
 WORKER_QCOW2 = "win7.qcow2"
@@ -302,24 +298,7 @@ def build_qemu_image(client):
             client.images.pull(QEMU_IMAGE)
 
 
-def chown_qemu_container(client, user, group):
-    if not (
-        type(user) == type(group) and type(user) == str and (len(user) + len(group) > 2)
-    ):
-        logger.error("Must set a user and a group to change ownership")
-        return
-    logger.info(f"Setting image ownership to {user}:{group}")
-    client.containers.run(
-        QEMU_IMAGE,
-        entrypoint="/bin/chown",
-        command=["-R", f"{user}:{group}", "/image"],
-        volumes={WORKERS_DIR: {"bind": "/image", "mode": "rw"}},
-        user="root",
-    )
-
-
 def run_qemu_container(client, snapshot_mode=False):
-    chown_qemu_container(client, "sledreguy", "qemu")
     logger.info("Running qemu container...")
     cmd = [
         "-nographic",
@@ -363,8 +342,7 @@ def wait_qemu_container(client):
         exit(1)
 
 
-def clean(complete_clean, client):
-    chown_qemu_container(client, "user", "users")
+def clean(complete_clean):
     if complete_clean:
         logger.info("Removing /workers directory...")
 
@@ -412,7 +390,6 @@ CELERY_TASKS_SCHEDULE=10.0
 NB_WIN7_WORKERS={nbr_workers}
 WIN7_IMAGES_DIR={WORKERS_DIR}
 QEMU_IMAGE={QEMU_IMAGE}
-DOCKER_HOST=/var/run/docker.sock
 """
     with open(ENV_FILE, "w") as fd:
         fd.write(text)
@@ -465,7 +442,7 @@ def main(args):
 
     check_binaries()
 
-    clean(args.clean, docker_client)
+    clean(args.clean)
 
     if not os.path.exists(BASE_QCOW2):
         download_win7()
