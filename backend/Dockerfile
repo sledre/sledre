@@ -1,9 +1,9 @@
-FROM python:3.8-alpine
+FROM docker.io/library/python:3.9-alpine
 
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # install psycopg2
 RUN apk update \

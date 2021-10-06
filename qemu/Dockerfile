@@ -1,8 +1,6 @@
-FROM archlinux:latest
+FROM doocker.io/library/alpine:latest
 
-RUN pacman -Syyu --noconfirm && \
-    pacman -S qemu-arch-extra qemu --noconfirm
-
-RUN mkdir /image
+RUN apk add qemu-system-i386 && \
+    mkdir /image
 
 ENTRYPOINT ["qemu-system-i386"]

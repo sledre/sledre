@@ -82,6 +82,8 @@ services:
       - node_modules:/usr/src/app/node_modules
     depends_on:
       - api
+    environment:
+      - NODE_ENV=development
 
   nginx:
     build:
@@ -104,6 +106,6 @@ networks:
     driver: bridge
     internal: true
     ipam:
-     config:
-       - subnet: 172.20.0.0/24
-         gateway: 172.20.0.1
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
