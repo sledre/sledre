@@ -1,4 +1,4 @@
-FROM doocker.io/library/alpine:latest
+FROM docker.io/library/alpine:latest
 
 RUN apk add qemu-system-i386 && \
     mkdir /image
