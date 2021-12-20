@@ -55,6 +55,8 @@ docker-compose -p sledre up -d
 You can now launch the app on your favorite Browser and upload your samples. Once the treatment is done you can download the results list (in a JSON format) on your computer.
 The application should be available at http://172.20.0.10/
 
+## Documentation
+The project documentation is available at [SledRE Documentation](https://sled.re/).
 
 ## Contributing
 To contribute, you should install the project in development mode.
