@@ -499,7 +499,9 @@ To provide this solution we are using Detours project from Microsoft.""",
         "-c", "--clean", help="Clean all qcow2 images", action="store_true"
     )
     parser.add_argument(
-        "--disable-network-isolation", help="Disable network isolation", action="store_true"
+        "--disable-network-isolation",
+        help="Disable network isolation",
+        action="store_true",
     )
     parser.add_argument(
         "-w",
