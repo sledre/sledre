@@ -372,7 +372,7 @@ def generate_postgres_password():
     return secret_key
 
 
-def update_env_file(nbr_workers):
+def update_env_file(nbr_workers, disable_net_isolation):
     logger.info(f"Updating {ENV_FILE} configuration file...")
     text = f"""SLEDRE_VERSION={SLEDRE_VERSION}
 DEBUG={"True" if DEV else "False"}
@@ -390,6 +390,7 @@ CELERY_TASKS_SCHEDULE=10.0
 NB_WIN7_WORKERS={nbr_workers}
 WIN7_IMAGES_DIR={WORKERS_DIR}
 QEMU_IMAGE={QEMU_IMAGE}
+NETWORK_ISOLATION={"false" if disable_net_isolation else "true"}
 """
     with open(ENV_FILE, "w") as fd:
         fd.write(text)
@@ -458,7 +459,7 @@ def main(args):
 
     snapshot_generation(ssh)
 
-    update_env_file(args.workers)
+    update_env_file(args.workers, args.disable_network_isolation)
 
     logger.info("Done!")
     print("\n")
@@ -496,6 +497,9 @@ To provide this solution we are using Detours project from Microsoft.""",
     )
     parser.add_argument(
         "-c", "--clean", help="Clean all qcow2 images", action="store_true"
+    )
+    parser.add_argument(
+        "--disable-network-isolation", help="Disable network isolation", action="store_true"
     )
     parser.add_argument(
         "-w",

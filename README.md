@@ -43,6 +43,7 @@ sudo apt update && sudo apt install qemu-utils
 pip3 install -r requirements.txt
 python3 setup.py -w <nbr_workers>
 ```
+If you wish to allow the Windows VMs internet access (and also LAN access if you don't setup any firewall rules), you can use the `--disable-network-isolation` option.
 
 ## Usage
 To run the project, just use the following command:
@@ -56,7 +57,9 @@ The application should be available at http://172.20.0.10/
 
 
 ## Contributing
-To contribute, you should install the project in development mode. To do that, start by cloning the repository in recursive mode:
+To contribute, you should install the project in development mode.
+The complete instructions are available on [SledRE Documentation](https://sled.re/project-setup/installation/).  
+Here is a quick summary. Start by cloning the repository in recursive mode:
 ```bash
 git clone --recursive git@github.com:sledre/sledre.git
 ```
