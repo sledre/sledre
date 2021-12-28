@@ -1,11 +1,12 @@
 <p align="center">
-  <img width="200" height="200" src="doc/logoyellow.png">
+  <img width="200" height="200" src="https://sled.re/images/favicon.png">
 </p>
 
 [![Release](https://github.com/sledre/sledre/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/sledre/sledre/actions/workflows/release.yml)
 [![Linter](https://github.com/sledre/sledre/actions/workflows/linter.yml/badge.svg?branch=main)](https://github.com/sledre/sledre/actions/workflows/linter.yml)
 # SledRE
 
+***This project is in alpha version. It can be buggy and many improvements can be done. If you wish, do not hesitate to make a contribution.***
 
 ## Introduction
 
@@ -16,14 +17,14 @@ For the moment only PESieve and Detours are integrated.
 [Detours](https://github.com/microsoft/Detours) job goal is to hook syscalls called by a Windows PE malware. 
 
 On the one hand, this application could be used as an analysis pipeline for Windows malware.  
-On the other hand, it could be used to generate a large dataset which can contains results from differents tools.
+On the other hand, it could be used to generate a large dataset which can contains results from different tools.
 This dataset could then be used in machine learning to try to classify samples by families.
 
 Detours traces can directly be imported in Ghidra using [ghidra-sledre](https://github.com/sledre/ghidra-sledre/) extension.
 
 ## Architecture
 <p align="center">
-  <img height="500" src="doc/SledREArchi.png">
+  <img height="500" src="https://sled.re/images/SledREArchi.png">
 </p>
 
 ## Installation
@@ -85,6 +86,6 @@ Finally, run the following command to start the application:
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
-In development configuration, backend and frontend folders are shared with containers using volumes so the project support hot reload.  
+In development configuration, backend and frontend folders are shared with containers using volumes so the project support hot reloads.  
 However, when editing celery tasks, do not forget to restart the celery container.  
-You'll also need recreate the Windows VM everytime you're editing the agent.
+You'll also need recreate the Windows VM every time you're editing the agent.
