@@ -10,3 +10,6 @@
 [submodule "agent"]
 	path = agent
 	url = git@github.com:sledre/agent.git
+[submodule "documentation"]
+	path = documentation
+	url = git@github.com:sledre/documentation.git
