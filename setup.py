@@ -17,7 +17,7 @@ from subprocess import Popen, PIPE
 from time import sleep
 
 # Constants
-SLEDRE_VERSION = "v0.0.1"
+SLEDRE_VERSION = "v0.1.0"
 DEV = False
 HOST = "127.0.0.1"
 SSH_PORT = 2222
@@ -90,7 +90,7 @@ def download_win7():
 
 def ssh_connect(ssh):
     logger.info("Trying to connect to Windows OpenSSH server...")
-    for i in range(10):
+    for i in range(30):
         try:
             sleep(10)
             logger.debug(f"Try number {i}/10.")
@@ -199,10 +199,15 @@ def install_dependencies(ssh):
 
 def check_agent_state(ssh):
     logger.info("Checking if SledRE service is running...")
-    stdout = send_ssh_cmd(ssh, 'cmd.exe /c "sc query AgentDetours"')
-    if "RUNNING" not in stdout[3]:
-        return False
-    return True
+    for i in range(30):
+        logger.debug(f"Try number {i}/10.")
+        stdout = send_ssh_cmd(ssh, 'cmd.exe /c "sc query AgentDetours"')
+        if "RUNNING" in stdout[3]:
+            logger.debug("Agent is running")
+            return True
+        sleep(10)
+    logger.debug("Agent is not running")
+    return False
 
 
 def make_snapshot():
@@ -262,6 +267,8 @@ def qcow2_generation(ssh):
         logger.error("Could not connect to OpenSSH server !")
         exit(1)
 
+    logger.info("Creating C:/Temp directory")
+    send_ssh_cmd(ssh, "mkdir /cygdrive/c/Temp")
     copy_files_to_vm(ssh)
 
     # Disable Windows Updates Service
@@ -390,7 +397,7 @@ CELERY_TASKS_SCHEDULE=10.0
 NB_WIN7_WORKERS={nbr_workers}
 WIN7_IMAGES_DIR={WORKERS_DIR}
 QEMU_IMAGE={QEMU_IMAGE}
-NETWORK_ISOLATION={"false" if disable_net_isolation else "true"}
+ISOLATED_NETWORK={"false" if disable_net_isolation else "true"}
 """
     with open(ENV_FILE, "w") as fd:
         fd.write(text)

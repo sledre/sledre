@@ -61,7 +61,12 @@ services:
 
   front:
     image: quay.io/sledre/frontend:${SLEDRE_VERSION}
-    command: npm run build && npm run start
+    command:
+      - sh
+      - -c
+      - |
+        npm run build
+        npm run start
     networks:
       sledre_lan:
         ipv4_address: 172.20.0.11
