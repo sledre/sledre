@@ -10,82 +10,30 @@
 
 ## Introduction
 
-SledRE is a scalable application for Windows malware analysis.
-For the moment only PESieve and Detours are integrated.
+[SledRE](https://github.com/sledre/sledre) is a scalable application for Windows malware analysis. It allows to run multiples jobs in parallels.
+At the moment, two jobs are available:
+- [PESieve](https://github.com/hasherezade/pe-sieve): this job goal is to unpack a Windows PE malware using PESieve.
+- [Detours](https://github.com/microsoft/Detours): this job goal is to hook and trace syscalls of Windows PE malware (more than a thousand common syscalls). Theses traces can be used to create artificial intelligence models. But they can also be directly imported to Ghidra using [ghidra-sledre](https://github.com/sledre/ghidra-sledre/) extension to help reverse engineers.   
 
-[PESieve](https://github.com/hasherezade/pe-sieve) job goal is to unpack a Windows PE malware.  
-[Detours](https://github.com/microsoft/Detours) job goal is to hook syscalls called by a Windows PE malware. 
+## Main features
+* Windows 7 sandbox using qemu and Linux containers
+* Automated installation using a script to build the VM with required binaries
+* Scalability of the Windows workers depending on the host resources
+* Windows syscall hooking to generate traces
+* Malware unpacking using PESieve
+* Tag creation based on hook traces
+* Dataset generation
+* Ghidra extension to import SledRE traces
 
-On the one hand, this application could be used as an analysis pipeline for Windows malware.  
-On the other hand, it could be used to generate a large dataset which can contains results from different tools.
-This dataset could then be used in machine learning to try to classify samples by families.
-
-Detours traces can directly be imported in Ghidra using [ghidra-sledre](https://github.com/sledre/ghidra-sledre/) extension.
+## Installation & Usage
+The installation and usage procedures are covered by the documentation.  
+The project documentation is available at [SledRE Documentation](https://sled.re/).
 
 ## Architecture
 <p align="center">
   <img height="500" src="https://sled.re/images/SledREArchi.png">
 </p>
 
-## Installation
-
-### Prerequisites
-
-- [X] Docker installed and running
-- [X] docker-compose
-- [X] Python3 and pip3 for the setup script
-- [X] qemu-convert binary (found in package qemu-utils)
-
-### Procedure
-To install the project, download and unzip the latest release.  
-Then, run the following commands:
-```bash
-sudo apt update && sudo apt install qemu-utils
-pip3 install -r requirements.txt
-python3 setup.py -w <nbr_workers>
-```
-If you wish to allow the Windows VMs internet access (and also LAN access if you don't setup any firewall rules), you can use the `--disable-network-isolation` option.
-
-## Usage
-To run the project, just use the following command:
-
-```bash
-docker-compose -p sledre up -d
-```
-
-You can now launch the app on your favorite Browser and upload your samples. Once the treatment is done you can download the results list (in a JSON format) on your computer.
-The application should be available at http://172.20.0.10/
-
-## Documentation
-The project documentation is available at [SledRE Documentation](https://sled.re/).
 
 ## Contributing
-To contribute, you should install the project in development mode.
-The complete instructions are available on [SledRE Documentation](https://sled.re/project-setup/installation/).  
-Here is a quick summary. Start by cloning the repository in recursive mode:
-```bash
-git clone --recursive git@github.com:sledre/sledre.git
-```
-
-Then install the dependencies:
-```bash
-sudo apt update && sudo apt install -y qemu-utils
-pip3 install -r requirements.txt
-```
-
-Now, you'll need the agent binaries. If you're looking for a specific version or directly modifying and testing the agent, you should compile everything yourself (static binaries such as `7zip` and `dotnetframework` are located in `sledre/agent/bin`).
-If you're not editing the agent <-> API interactions, then everything should work fine with the bin folder of the latest SledRE release.
-
-Then you can setup the project using the `setup.py` script:
-```bash
-python3 setup.py --dev -w <nbr_workers>
-```
-
-Finally, run the following command to start the application:
-```bash
-docker-compose -f docker-compose.dev.yml up -d
-```
-
-In development configuration, backend and frontend folders are shared with containers using volumes so the project support hot reloads.  
-However, when editing celery tasks, do not forget to restart the celery container.  
-You'll also need recreate the Windows VM every time you're editing the agent.
+If you wish to make a contribution, you should check out the [Development Documentation](https://sled.re/development/)
